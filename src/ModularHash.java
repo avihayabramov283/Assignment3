@@ -5,12 +5,13 @@ public class ModularHash implements HashFactory<Integer> {
     private HashingUtils utils;
 
     public ModularHash() {
-        throw new UnsupportedOperationException("Delete this line and replace it with your implementation");
+        this.rand = new Random();
+        this.utils = new HashingUtils();
     }
 
     @Override
     public HashFunctor<Integer> pickHash(int k) {
-        throw new UnsupportedOperationException("Delete this line and replace it with your implementation");
+        return new Functor(k);
     }
 
     public class Functor implements HashFunctor<Integer> {
@@ -20,12 +21,17 @@ public class ModularHash implements HashFactory<Integer> {
         final private int m;
 
         public Functor(int k){
-            throw new UnsupportedOperationException("Delete this line and replace it with your implementation");
+            this.m = 1 << k;
+            this.p = utils.genPrime((long) Integer.MAX_VALUE + 1, Long.MAX_VALUE);
+            this.a = rand.nextInt(Integer.MAX_VALUE - 1) + 1;
+            this.b = rand.nextInt(Integer.MAX_VALUE);
         }
 
         @Override
         public int hash(Integer key) {
-            throw new UnsupportedOperationException("Delete this line and replace it with your implementation");
+            long axb = (long) a * key + b;
+            long modP = HashingUtils.mod(axb, p);
+            return (int) (modP % m);
         }
 
         public int a() {
