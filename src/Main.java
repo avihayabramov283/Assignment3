@@ -1,32 +1,37 @@
 public class Main {
     public static void main(String[] args) {
-        System.out.println("=== Testing ModularHash (int → [m]) ===");
-        HashFactory<Integer> intFactory = new ModularHash();
-        HashFunctor<Integer> intHasher = intFactory.pickHash(4); // m = 16
+        System.out.println("=== Testing ProbingHashTable ===");
 
-        System.out.println("Hash values for integers 0–9:");
-        for (int i = 0; i < 10; i++) {
-            int h = intHasher.hash(i);
-            System.out.println("hash(" + i + ") = " + h);
-        }
+        // יוצרים טבלת גיבוב עם capacity = 4 ו-load factor = 0.75
+        HashFactory<Integer> factory = new ModularHash();
+        ProbingHashTable<Integer, String> table = new ProbingHashTable<>(factory, 2, 0.75); // m = 4
 
-        ModularHash.Functor intFunctor = (ModularHash.Functor) intHasher;
-        System.out.println("Params: a = " + intFunctor.a() + ", b = " + intFunctor.b() +
-                ", p = " + intFunctor.p() + ", m = " + intFunctor.m());
+        // הכנסת ערכים
+        table.insert(1, "one");
+        table.insert(2, "two");
+        table.insert(3, "three");
 
-        System.out.println();
-        System.out.println("=== Testing MultiplicativeShiftingHash (long → [m]) ===");
-        HashFactory<Long> longFactory = new MultiplicativeShiftingHash();
-        HashFunctor<Long> longHasher = longFactory.pickHash(5); // m = 32
+        // חיפוש
+        System.out.println("Search key 2: " + table.search(2)); // "two"
+        System.out.println("Search key 5 (not found): " + table.search(5)); // null
 
-        System.out.println("Hash values for longs 0–9:");
-        for (long i = 0; i < 10; i++) {
-            int h = longHasher.hash(i);
-            System.out.println("hash(" + i + ") = " + h);
-        }
+        // עדכון ערך קיים
+        table.insert(2, "TWO");
+        System.out.println("Search updated key 2: " + table.search(2)); // "TWO"
 
-        MultiplicativeShiftingHash.Functor longFunctor = (MultiplicativeShiftingHash.Functor) longHasher;
-        System.out.println("Params: a = " + longFunctor.a() + ", k = " + longFunctor.k());
+        // מחיקה
+        boolean deleted = table.delete(3);
+        System.out.println("Deleted key 3: " + deleted); // true
+        System.out.println("Search key 3 after delete: " + table.search(3)); // null
+
+        // הכנסת עוד איברים שיגרמו ל-rehash
+        table.insert(4, "four");
+        table.insert(5, "five");
+
+        System.out.println("After rehash, capacity = " + table.capacity());
+        System.out.println("Search key 5: " + table.search(5)); // "five"
+        System.out.println("Search key 1: " + table.search(1)); // "one"
+
+        System.out.println("=== Done Testing ProbingHashTable ===");
     }
 }
-
