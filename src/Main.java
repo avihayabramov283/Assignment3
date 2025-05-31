@@ -1,26 +1,33 @@
 public class Main {
     public static void main(String[] args) {
-        System.out.println("=== Measuring Insertions Probing ===");
-        double[] probeInsert = HashingExperimentUtils.measureInsertionsProbing();
-        printResults(probeInsert);
+        MyDataStructure ds = new MyDataStructure(100);
 
-        System.out.println("=== Measuring Searches Probing ===");
-        double[] probeSearch = HashingExperimentUtils.measureSearchesProbing();
-        printResults(probeSearch);
+        System.out.println("Inserting values:");
+        System.out.println(ds.insert(10)); // true
+        System.out.println(ds.insert(20)); // true
+        System.out.println(ds.insert(10)); // false
 
-        System.out.println("=== Measuring Insertions Chaining ===");
-        double[] chainInsert = HashingExperimentUtils.measureInsertionsChaining();
-        printResults(chainInsert);
+        System.out.println("Contains:");
+        System.out.println(ds.contains(10)); // true
+        System.out.println(ds.contains(15)); // false
 
-        System.out.println("=== Measuring Searches Chaining ===");
-        double[] chainSearch = HashingExperimentUtils.measureSearchesChaining();
-        printResults(chainSearch);
-    }
+        System.out.println("Rank:");
+        System.out.println(ds.rank(15)); // 1
 
-    private static void printResults(double[] results) {
-        for (int i = 0; i < results.length; i++) {
-            System.out.printf("α[%d] = %.2f ns\n", i, results[i]);
-        }
+        System.out.println("Select:");
+        System.out.println(ds.select(0)); // 10
+        System.out.println(ds.select(1)); // 20
+
+        System.out.println("Range:");
+        System.out.println(ds.range(10, 20)); // [10, 20]
+        System.out.println(ds.range(15, 25)); // null
+
+        System.out.println("Delete:");
+        System.out.println(ds.delete(10)); // true
+        System.out.println(ds.contains(10)); // false
     }
 }
+
+
+
 

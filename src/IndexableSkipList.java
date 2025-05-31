@@ -4,7 +4,7 @@ public class IndexableSkipList extends AbstractSkipList {
         super();
         this.p = probability;
     }
-	
+
 	@Override
     public void decreaseHeight() {
         while (head.height() >= 0 && head.getNext(head.height()) == tail) {
@@ -31,18 +31,39 @@ public class IndexableSkipList extends AbstractSkipList {
     @Override
     public int generateHeight() {
         int height = 0;
-        while (Math.random() >= p) {
+        while (Math.random() < p) {
             height++;
         }
         return height;
     }
 
     public int rank(int key) {
-        throw new UnsupportedOperationException("Delete this line and replace it with your implementation");
+        int ans = 0;
+        SkipListNode current = head;
+        for (int idx = head.height(); idx >= 0; idx--) {
+            while (current.getNext(idx).key() < key) {
+                current = current.getNext(idx);
+                ans += current.getSpan()[idx];
+            }
+        }
+        return ans;
     }
 
     public int select(int index) {
-        throw new UnsupportedOperationException("Delete this line and replace it with your implementation");
+        if (index < 0) return minimum().key();
+        if (index >= size) return maximum().key();
+
+        SkipListNode current = head;
+        int pass = 0;
+        index++;
+        for (int j = head.height(); j >= 0; j--) {
+            while ((current.getNext(j).getSpan()[j]) + pass <= index) {
+                current = current.getNext(j);
+                pass += current.getSpan()[j];
+            }
+        }
+        int ans = current.key();
+        return ans;
     }
 
 }

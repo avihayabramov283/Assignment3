@@ -15,6 +15,7 @@ public class Element<K,V> {
 	public Element(K key, V satelliteData) {
 		this.key = key;
 		this.satelliteData = satelliteData;
+		this.isDeleted = false;
 	}
 	
 	public Element(K key) {

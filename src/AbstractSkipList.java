@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 import java.util.ArrayList;
@@ -6,16 +7,41 @@ import java.util.List;
 abstract public class AbstractSkipList {
     final protected SkipListNode head;
     final protected SkipListNode tail;
+    protected int size;
+
 
     public AbstractSkipList() {
         head = new SkipListNode(Integer.MIN_VALUE);
         tail = new SkipListNode(Integer.MAX_VALUE);
+        this.size = 0;
         increaseHeight();
     }
 
     public void increaseHeight() {
         head.addLevel(tail, null);
         tail.addLevel(null, head);
+
+        head.span = new int[head.height + 1];
+        for (int i = 0; i < head.span.length; i++) {
+            head.span[i] = 0;
+        }
+
+        if (tail.span == null) {
+            tail.span = new int[tail.height + 1];
+            for (int i = 0; i < tail.span.length; i++) {
+                tail.span[i] = 1;
+            }
+        } else {
+            int oldLength = tail.span.length;
+            int[] oldSpan = tail.span;
+            tail.span = new int[head.height + 1];
+
+            for (int i = 0; i < oldLength; i++) {
+                tail.span[i] = oldSpan[i];
+            }
+
+            tail.span[tail.span.length - 1] = size + 1;
+        }
     }
 	
     abstract void decreaseHeight();
@@ -37,40 +63,75 @@ abstract public class AbstractSkipList {
             increaseHeight();
         }
 
-        SkipListNode prevNode = find(key);
-        if (prevNode.key() == key) {
+        SkipListNode prev = find(key);
+        if (prev.key() == key) {
             return null;
         }
 
         SkipListNode newNode = new SkipListNode(key);
+        newNode.span = new int[nodeHeight + 1];
+        int totalSteps = 1;
 
-        for (int level = 0; level <= nodeHeight && prevNode != null; ++level) {
-            SkipListNode nextNode = prevNode.getNext(level);
+        for (int lvl = 0; lvl <= nodeHeight && prev != null; lvl++) {
+            SkipListNode next = prev.getNext(lvl);
 
-            newNode.addLevel(nextNode, prevNode);
-            prevNode.setNext(level, newNode);
-            nextNode.setPrev(level, newNode);
+            newNode.addLevel(next, prev);
+            prev.setNext(lvl, newNode);
+            next.setPrev(lvl, newNode);
 
-            while (prevNode != null && prevNode.height() == level) {
-                prevNode = prevNode.getPrev(level);
+            newNode.span[lvl] = totalSteps;
+
+            while (prev != null && prev.height() == lvl) {
+                totalSteps += prev.span[lvl];
+                prev = prev.getPrev(lvl);
             }
         }
 
+        for (int lvl = 0; lvl <= newNode.height; lvl++) {
+            SkipListNode next = newNode.getNext(lvl);
+            next.span[lvl] = next.span[lvl] - newNode.span[lvl] + 1;
+        }
+
+        int lvl = nodeHeight;
+        SkipListNode current = newNode.getNext(newNode.height);
+        while (current != null) {
+            while (current.height > lvl) {
+                current.span[lvl + 1]++;
+                lvl++;
+            }
+            current = current.getNext(lvl);
+        }
+
+        size++;
         return newNode;
     }
 
     public boolean delete(SkipListNode skipListNode) {
-        for (int level = 0; level <= skipListNode.height(); ++level) {
-            SkipListNode prev = skipListNode.getPrev(level);
-            SkipListNode next = skipListNode.getNext(level);
-            prev.setNext(level, next);
-            next.setPrev(level, prev);
-        }
-		
-        while (head.height() >= 0 && head.getNext(head.height()) == tail) {
-        	decreaseHeight();
+        for (int i = 0; i <= skipListNode.height(); i++) {
+            SkipListNode before = skipListNode.getPrev(i);
+            SkipListNode after = skipListNode.getNext(i);
+
+            before.setNext(i, after);
+            after.setPrev(i, before);
         }
 
+
+        for (int i = 0; i <= skipListNode.height; i++) {
+            SkipListNode after = skipListNode.getNext(i);
+            after.span[i] = after.span[i] + skipListNode.span[i] - 1;
+        }
+
+        int level = skipListNode.height;
+        SkipListNode walker = skipListNode.getNext(level);
+        while (walker != null) {
+            while (walker.height > level) {
+                walker.span[level + 1]--;
+                level++;
+            }
+            walker = walker.getNext(level);
+        }
+
+        size--;
         return true;
     }
 
@@ -134,13 +195,14 @@ abstract public class AbstractSkipList {
         final private List<SkipListNode> next;
         final private List<SkipListNode> prev;
         private int height;
+        private int[] span;
 
         public SkipListNode(int key) {
         	super(key);
             next = new ArrayList<>();
             prev = new ArrayList<>();
             this.height = -1;
-            
+
         }
 
         public SkipListNode getPrev(int level) {
@@ -188,5 +250,11 @@ abstract public class AbstractSkipList {
         }
 
         public int height() { return height; }
+
+        public int[] getSpan(){
+            return span;
+        }
+
+
     }
 }
